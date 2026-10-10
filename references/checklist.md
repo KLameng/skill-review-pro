@@ -1,118 +1,114 @@
-# 详细检查清单（L1–L5 + 持续治理）
+# Detailed Checklist (L1–L5 + Continuous Governance)
 
-本文件是 skill-review-pro 的逐层检查清单、方法与硬伤信号。按层执行，N/A 项附理由计入报告计数。
+This file is skill-review-pro's per-layer checklist, methods, and hard-failure signals. Execute layer by layer; N/A items attach a reason and count into the report tally.
 
 ---
 
-## L1 文档自洽（6 + 设计质量 2 项）
+## L1 Document self-consistency (6 + 2 design-quality items)
 
-| # | 检查项 | 方法 | 硬伤信号 |
+| # | Check | Method | Hard-failure signal |
 |---|--------|------|----------|
-| 1 | frontmatter 完整 | name/description 存在且非空，name 符合正则 | 缺 name 或 description -> 技能无法识别触发 |
-| 2 | 规则无矛盾 | 摘出全部规则/阈值/判定标准，两两比对 | 同一情形存在互斥指令 |
-| 3 | 术语一致 | 同一概念全文单一叫法 | 同一概念两种以上叫法 |
-| 4 | 流程闭环 | 每步有入口/产物/下游/失败出口 | 某步无入口/无产物/无失败出口 |
-| 5 | 引用核对 | 引用的脚本/文件/路径与实际逐字一致 | 引用了不存在的文件 |
-| 6 | 触发精准度 | 逐词比对 description 触发短语与实际能力：功能-触发对齐、漏触发、过宽误触发、跨界 | 触发短语与功能不匹配；漏核心场景；过宽被无关请求命中；含其他技能职责 |
-| 7 | 渐进式披露 | 内容分层在 frontmatter/SKILL.md/references，长内容移 references | SKILL.md 超长、细节全堆在正文 |
-| 8 | 上下文效率 | 篇幅是否精简、引用是否最优（行数/字数千可权衡） | 篇幅远超必要、重复冗余 |
+| 1 | frontmatter complete | name/description present & non-empty, name matches regex | missing name or description → skill cannot be recognized/triggered |
+| 2 | No rule contradiction | extract all rules/thresholds/judgment criteria, compare pairwise | mutually exclusive instructions for the same situation |
+| 3 | Term consistency | one concept, one single name across the whole text | two+ names for one concept |
+| 4 | Closed flow | every step has entry/artifact/downstream/failure exit | a step with no entry / no artifact / no failure exit |
+| 5 | Reference check | referenced scripts/files/paths match text verbatim | references a non-existent file |
+| 6 | Trigger precision | word-by-word compare description trigger phrases vs actual capability: function-trigger alignment, missed triggers, over-broad false triggers, cross-boundary | trigger phrase does not match function; core scenario missed; over-broad hit by unrelated requests; includes other skills' duties |
+| 7 | Progressive disclosure | content layered across frontmatter/SKILL.md/references; long content moved to references | SKILL.md overlong, all details piled into the body |
+| 8 | Context efficiency | whether length is lean and references optimal (rows/words tradeoffs acceptable) | length far beyond needed, redundant repetition |
 
 ---
 
-## L2 逻辑审查（8 项 + 自动化静态检查）
+## L2 Logic review (8 items + automated static checks)
 
-| # | 检查项 | 查什么 | 硬伤信号 |
+| # | Check | What it checks | Hard-failure signal |
 |---|--------|--------|----------|
-| D1 | 步骤可执行 | 每步指引具体，执行者能直接照做 | 「根据实际情况调整」「自行判断」等模糊指令 |
-| D2 | 代码片段语法正确 | 嵌入 Python/JS/伪代码语法正确、可直接执行 | 属性访问不存在、变量未定义、函数签名错误 |
-| D3 | 输入规格明确 | 需要什么输入、从哪获取、格式要求 | 输入规格缺失或含糊，执行者临场编造 |
-| D4 | 异常/边界兜底 | 输入不符合预期时有处理指引 | 无任何异常处理，执行者遇异常必卡 |
-| D5 | 版本无关性 | 数字/名称/路径参数化；随外部事实变化则显式版本绑定+声明重核验 | 写死不随外部事实变化的内部计数，或绑定后未声明重核验 |
-| D6 | 输出规格明确 | 产物格式、存放位置、命名规范已写明 | 产物格式/路径未定义 |
-| D7 | 交叉引用一致 | 文档内部引用指向正确 | 引用指向不存在步骤或与实际不符 |
-| D8 | 代码块逻辑自洽 | 完整代码块前后一致 | 同一变量在不同代码块中类型/含义矛盾 |
+| D1 | Steps executable | each step specific enough for the executor to follow directly | vague instructions like "adjust per actual situation" / "use your own judgment" |
+| D2 | Code snippets syntactically correct | embedded Python/JS/pseudocode syntactically correct and directly runnable | attribute access to non-existent attr, undefined variable, wrong function signature |
+| D3 | Input specs explicit | what input is needed, where from, format requirements | input specs missing or vague; executor improvises |
+| D4 | Exception/boundary fallback | has handling guidance when input is not as expected | no exception handling at all; executor stalls on anomaly |
+| D5 | Version-independence | numbers/names/paths parameterized; explicit version binding + declared re-verification when following external facts | internal counts hardcoded not following external facts, or bound without declared re-verification |
+| D6 | Output specs explicit | artifact format, location, naming convention written | artifact format/path undefined |
+| D7 | Cross-references consistent | internal references point correctly | reference points to a non-existent step or mismatches reality |
+| D8 | Code blocks logically self-consistent | complete code blocks consistent before/after | same variable with contradictory type/meaning across blocks |
 
-**自动化静态检查**：执行 `scripts/static_check.py <被审目录>`。核验项：
+**Automated static checks**: run `scripts/static_check.py <target-dir>`. Checks:
+- frontmatter exists and is valid YAML; name/description non-empty;
+- relative reference paths in Markdown exist (incl. `cross_skill_refs` cross-skill whitelist exemption);
+- anti-pattern hit list (see L5 anti-pattern table).
 
-- frontmatter 存在且为合法 YAML，name/description 非空；
-- Markdown 内相对引用路径存在（含 `cross_skill_refs` 跨技能引用白名单豁免）；
-- 反模式命中清单（详见 L5 反模式表）。
+Results merge into L2 and L5 evidence. If the script lacks dependencies or errors, record it and explain; do not substitute script failure for manual inspection.
 
-结果并入 L2 与 L5 证据。脚本缺依赖/报错时记录并说明，不以脚本失败代替人工检查。
+**Numeric-consistency check (doc/data-asset mandatory)**: run `scripts/counts_check.py <target-dir>` —
+- extract count declarations from SKILL.md and references/*.md (`<int> items/entries/coordinates/pairs/dims/layers/frameworks`), list location & context;
+- output structural summary of references/*.json (top-level length, count-key length);
+- if the reviewed skill has `references/counts_manifest.json`, assert each count declared in SKILL.md vs the actual data-file entry count, producing a diff table.
 
-**数字口径核对（文档型/数据资产型必查）**：执行 `scripts/counts_check.py <被审目录>`——
+Every count SKILL.md declares must correspond one-to-one to the data file's actual count; where unmatched, note the measurement basis in the report (distinguish "book value vs mechanism count" etc.).
 
-- 提取 SKILL.md 与 references/*.md 中的计数声明（`<int> 项/条/个/坐标/对/维/层/框架`），列出位置与上下文；
-- 输出 references/*.json 的结构摘要（顶层长度、计数键长度）；
-- 若被审技能含 `references/counts_manifest.json`，逐项精确断言 SKILL.md 声称计数 vs 数据文件实际条数，产出差异表。
-
-SKILL.md 声明的每个计数必须与数据文件实际条数逐一对应；无法对应时在报告标注口径说明（区分"账面数 vs 机制数"等）。
-
-**L2.5 外部权威值核验（v1.3，引用外部权威事实的技能必查）**：执行 `scripts/external_check.py <目录|群>`——
-
-- 提取 SKILL.md 与 references/*.md 中阈值/频率类外部值声明（如 `<0.00001`、`>0.01`、`0.002%`），上下文命中阈值关键词（AF/MAF/频率/等位基因/BA1/BS1/PM2 等）；
-- 断言每个外部值**绑定来源**（URL/cspec/genome.network/PMID/ClinGen/VCEP/版本/年份）；未绑定来源 → **hard（外部值无溯源）**；
-- 断言外部值**锁版本**（cspec vX.Y/年份）；未锁版本 → WARN（登记"待核验版本"，供外部升版重审触发）；
-- 取值对错由执行者按来源去权威站核验，结论写入报告"外部值核验"字段；**不得把"内部一致"当作"外部正确"**（案例 C-14：PTEN BA1 内部一致但 vs ClinGen 官网差 18 倍）。
+**L2.5 External-authoritative-value verification (v1.3, mandatory for skills citing external authoritative facts)**: run `scripts/external_check.py <dir|group>` —
+- extract threshold/frequency-class external value declarations from SKILL.md and references/*.md (e.g. `<0.00001`, `>0.01`, `0.002%`), context matching threshold keywords (AF/MAF/frequency/allele/BA1/BS1/PM2 etc.);
+- assert each external value **binds a source** (URL/cspec/genome.network/PMID/ClinGen/VCEP/version/year); no bound source → **hard (external value untraceable)**;
+- assert each external value **locks a version** (cspec vX.Y/year); no locked version → WARN (register "version pending verification", for external-upgrade re-review trigger);
+- the executor verifies value correctness against the source at the authoritative site; write the result/conclusion into the report's "external-value verification" field; **never treat "internally consistent" as "externally correct"** (case C-14: PTEN BA1 internally consistent yet 18× off vs the ClinGen official site).
 
 ---
 
-## L3 实战推演（4 项）
+## L3 Walkthrough (4 items)
 
-| # | 检查项 | 方法 |
+| # | Check | Method |
 |---|--------|------|
-| 1 | 全程走通 | 用真实输入从头走到尾，逐步记录 |
-| 2 | 卡点清零 | 所有会卡住的点已回补文档至无歧义 |
-| 3 | 口径一致 | 产物/报告格式、数字、措辞全文一致 |
-| 4 | 新链路已验证 | 新增步骤/脚本已用真实输入实战通过 |
+| 1 | Run through end-to-end | walk start-to-finish with real input, recording each step |
+| 2 | Blockers cleared | every stalling point backfilled into the doc until unambiguous |
+| 3 | Consistent measurement | artifact/report format, numbers, wording consistent throughout |
+| 4 | New chain verified | newly added steps/scripts passed a real-input walk |
 
-**L3 边界**：文档走查，非运行时实证；需要真跑验证时转 L4。L3 重点找四类问题：会卡住的点、需临场发挥的点、无留痕删除、口径不一致。
+**L3 boundary**: document walk-through, not runtime verification; when real running is needed, move to L4. L3 focuses on four problem types: points that stall, points needing improvisation, deletions without trace, measurement inconsistencies.
 
-**L3 走查留痕（可复核性）**：每条链路记录"输入 → 每步动作 → 产物/卡点"四列轨迹；"口径一致 / 卡点清零"结论必须引用具体条目，写入报告 `walkthrough` 字段，不得只写结论。
+**L3 trace (reviewable)**: record each chain's "input → each step action → artifact/blocker" four-column trace; the "measurement consistent / blockers cleared" conclusion must cite specific entries into the report's `walkthrough` field, not just the conclusion.
 
 ---
 
-## L4 行为级实证（条件式）
+## L4 Behavioral verification (conditional)
 
-仅当 §3 判定 L4 适用时执行。核心判据与记录字段：
+Run only when §3 judges L4 applicable. Core criteria and record fields:
 
-| 步骤 | 内容 | 记录字段 |
+| Step | Content | Record field |
 |---|---|---|
-| 1 测试集 | 正/负触发样本、任务场景、边界、历史 bug；有金标准用权威标签（不得自编）；规模建议 ≥20 或按金标准定 | `test_set_n` |
-| 2 基线对照 | 不带技能 vs 带技能跑同一批，对比成功率、错误类型 | `baseline_success` / `skill_success` |
-| 3 确定性契约 | 脚本核验输出格式/文件/字段/schema/目录 | `deterministic_contract` |
-| 4 重复运行 | 同一用例跑 N≥3 次看稳定性 | `repeat_n` |
-| 5 精度/召回 | 有金标准时计算 | `precision` / `recall` |
-| 6 成本代理 | token 数、耗时相对指标，标注非真实计费 | `cost_proxy_tokens` |
-| 7 留档 | 写入 JSON behavior 字段与 registry | `conclusion` |
+| 1 Test set | positive/negative trigger samples, task scenarios, boundaries, historical bugs; use authoritative labels when a golden exists (never self-invented); scale ≥20 or per golden | `test_set_n` |
+| 2 Baseline comparison | run the same batch without vs with the skill, compare success rate, error types | `baseline_success` / `skill_success` |
+| 3 Deterministic contract | script verifies output format/file/field/schema/directory | `deterministic_contract` |
+| 4 Repeated runs | same case run N≥3 for stability | `repeat_n` |
+| 5 Precision/recall | compute when golden exists | `precision` / `recall` |
+| 6 Cost proxy | token count, elapsed relative metrics, noted as non-real billing | `cost_proxy_tokens` |
+| 7 Archive | write into JSON behavior field and registry | `conclusion` |
 
-**通过阈值**：由执行者按技能后果严重性设定并在报告注明；临床/金融/安全类从严。阈值未注明视为未完成。
+**Pass threshold**: set by the executor per the skill's consequence severity and stated in the report; clinical/finance/security strict. Threshold unstated = unfinished.
 
-**假精度警示**：测试集过小、分布偏斜时，精度数字不可外推，记 soft"小样本假精度"。
+**False-precision warning**: when the test set is too small or skew-distributed, precision numbers are not generalizable; record soft "small-sample false precision".
 
 ---
 
-## L5 安全红线扫描（静态）
+## L5 Security red-line scan (static)
 
-反模式命中清单（可复用 `scripts/static_check.py`）：
+Anti-pattern hit list (reusable via `scripts/static_check.py`):
 
-| 反模式 | 信号示例 | 默认级别 |
+| Anti-pattern | Example signal | Default severity |
 |---|---|---|
-| 凭据/密钥访问 | `~/.ssh`、`~/.aws`、`.env`、keychain、token | hard |
-| 网络外泄 | curl/fetch 将本地数据 POST 出网、webhook、pastebin | hard |
-| 混淆 | base64 blob、hex payload、minified 单行 | soft→hard |
-| 动态执行 | `eval`、`exec`、管道下载到 shell | hard |
-| 持久化 | 后门、开机自启、定时器 | hard |
-| 破坏性操作 | `rm`、覆盖关键文件、无确认删除 | soft→hard |
+| Credential/key access | `~/.ssh`, `~/.aws`, `.env`, keychain, token | hard |
+| Network exfiltration | curl/fetch POSTing local data out, webhook, pastebin | hard |
+| Obfuscation | base64 blob, hex payload, minified single line | soft→hard |
+| Dynamic execution | `eval`, `exec`, piping download into shell | hard |
+| Persistence | backdoor, auto-start on boot, timers | hard |
+| Destructive ops | `rm`, overwriting critical files, deletion without confirmation | soft→hard |
 
-命中任一红线至少记 soft；凭据外泄、动态执行、持久化记 hard。
+Any red-line hit is at least soft; credential leak, dynamic execution, persistence are hard.
 
 ---
 
-## 持续治理
+## Continuous governance
 
-复审完成后：
-
-1. 将 `review_report.json` 追加到 `reviews/<skill>.json` registry 索引（累积条目）。
-2. 登记重评估触发：技能改动、数据/指南升版（如 ACMG 版本更新）、依赖变更、用户点名、或定时重审（cron）。
-3. 漂移监控：技能版本变化后对比新旧两轮，标记新增 hard/soft/行为阈值下滑。
+After a review:
+1. Append `review_report.json` to the `reviews/<skill>.json` registry index (accumulated entries).
+2. Register re-evaluation triggers: skill change, data/guideline upgrade (e.g. ACMG version update), dependency change, user naming, or scheduled re-review (cron).
+3. Drift monitoring: after a skill version change, compare the new vs old rounds, marking new hard/soft/behavioral-threshold declines.

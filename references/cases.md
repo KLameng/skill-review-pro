@@ -1,22 +1,22 @@
-# 案例库
+# Case Library
 
-复审归档目标。**归档规则（强制）**：每次复审结束，hard 必归档、soft 典型者归档；条目来自复审报告 `archive` 数组，按数组逐条追加，禁止手工另立或遗漏。注明画像与对应检查项。
+Review archival target. **Archive rule (mandatory)**: at the end of each review, all `hard` issues must be archived and typical `soft` ones too; entries come from the `archive` array of the review report, appended entry-by-entry — no manual additions or omissions. Note the profile and the corresponding check item.
 
-| 编号 | 标题 | 级别 | 对应检查项 | 画像 |
+| # | Title | Level | Check item | Profile |
 |------|------|------|-----------|------|
-| C-01 | 代码片段 tuple 当 dict 用，执行者照抄 AttributeError | hard 代码错误 | D2 | 脚本型 |
-| C-02 | 验证清单硬编码卡片数，下版本卡片数变化导致误报 | soft 版本硬编码 | D5 | 脚本型 |
-| C-03 | 第5步构建 tuple，第8步写 .P 属性访问 -- 前后矛盾 | hard 规则矛盾 | D7 | 脚本型 |
-| C-04 | 选项名在枚举中不存在，查询无 KeyError 兜底 | hard 流程断裂 | D4 | 脚本型 |
-| C-05 | 文档型技能缺"条目查无"出口，执行者遇到未收录条目只能临场发挥 | soft 可操作性 | D4 | 文档型 |
-| C-06 | description 触发词过宽被无关请求命中，未限定对象与边界 | soft 声明边界 | L1-6 | 文档型 |
-| C-07 | 复审报告 Markdown 与 JSON 触发词分隔符不一致（TRIGGER 01 vs TRIGGER_01） | soft 术语一致 | L1-3 | 文档型 |
-| C-08 | 检查清单条目总数硬编码分布于多处，清单增删需跨位置同步 | soft 版本硬编码 | D5 | 文档型 |
-| C-09 | 确定性契约失败：文档与代码均正确，但运行时输出格式不符合 schema | hard 行为不达标 | L4 | 行为型 |
-| C-10 | 技能内嵌 .env 读取并外泄，静态扫描命中凭据反模式 | hard 安全红线 | L5 | 脚本型 |
-| C-11 | 小测试集（10 例）跑出 95% 精度但分布偏斜，精度不可外推 | soft 小样本假精度 | L4 | 行为型 |
-| C-12 | 技能改版后未重评估，行为阈值下滑未被捕获 | soft 防漂移 | 治理 | 混合型 |
-| C-13 | 数据资产型技能被"文档型"一刀切判 L4 N/A，本可做金标准回归实证（校准集命中率）却跳过，行为实证缺失（2026-09-30 skill-review-pro v1.1 完善触发） | soft 画像分流 | L4 | 数据资产型 |
-| C-14 | 外部权威值内部一致但整体错：ACMG PTEN BA1 阈值文档内 raw/括号/各表全一致（内部自洽），但 vs ClinGen cspec v3.2 差 18 倍（技能 0.01，官方 0.00056），五层复审全过也没发现——需 L2.5 外部值核验层补盲区（2026-10-09 skill-review-pro v1.3 新增触发） | hard 外部值无溯源 | L2.5 | 混合型 |
-| C-15 | 克隆检测只看文档相似度，漏掉"文档分叉但执行体同源"双胞胎：ev-variant-literature-patient ↔ variant-literature-patient 共用 main.py（2 个脚本内容哈希一致），SKILL.md 一新一旧相似度 <85% 被 v1.3 放过，执行体相同却各自演进=最大漂移风险——v1.4 加脚本内容哈希同源通道捕获（2026-10-10 skill-review-pro v1.4 触发） | soft 防漂移 | P2 | 混合型 |
-| C-16 | 审核工具自身被误报淹没：external_check 对"无外部权威值"的 skill-review-pro 报 2 FAIL/7 WARN，逐条判定全部误报——①箭头 `-> 0` 被 CMP_RE 当比较符 `>` 抓出（"grep 旧表述 -> 0 命中"）；②教学/模板示例被当外部值（文档自举的 `<0.00001`、`0.002%`、模板的 `≥2PS`/`1 BA1`）。结论 L2.5 应 N/A；但暴露工具缺陷——审核工具最大的敌人是误报，误报多会失去信任（2026-10-10 skill-review-pro v1.5 触发） | soft 误报源 | L2.5 | 混合型 |
+| C-01 | Code snippet uses a tuple as a dict; executor copying it hits AttributeError | hard · code error | D2 | script |
+| C-02 | Validation checklist hardcodes card count; next version's card-count change causes false report | soft · hardcoded version | D5 | script |
+| C-03 | Step 5 builds a tuple, step 8 accesses `.P` attribute — contradictory | hard · rule contradiction | D7 | script |
+| C-04 | Option name not in the enum; query has no KeyError fallback | hard · broken flow | D4 | script |
+| C-05 | Doc-type skill lacks a "entry not found" exit; executor faced with an unlisted entry must improvise | soft · operability | D4 | document |
+| C-06 | description trigger words too broad, hit by unrelated requests — no scope/object constraint | soft · declared boundary | L1-6 | document |
+| C-07 | Review report Markdown vs JSON trigger separator inconsistency (TRIGGER 01 vs TRIGGER_01) | soft · term consistency | L1-3 | document |
+| C-08 | Checklist total hardcoded across multiple spots; adding/removing entries requires cross-location sync | soft · hardcoded version | D5 | document |
+| C-09 | Deterministic-contract failure: doc and code both correct, but runtime output format does not match the schema | hard · behavior below threshold | L4 | behavioral |
+| C-10 | Skill reads embedded `.env` and leaks it; static scan hits the credential anti-pattern | hard · security red line | L5 | script |
+| C-11 | Small test set (10 cases) yields 95% precision but skewed distribution; precision not generalizable | soft · small-sample false precision | L4 | behavioral |
+| C-12 | Skill version changed but not re-evaluated; behavioral threshold decline not captured | soft · drift | governance | hybrid |
+| C-13 | A data-asset skill judged "doc-type → L4 N/A" by a blanket rule, skipping the golden-sample regression it could run (calibration-set hit rate); behavioral verification missing (2026-09-30, skill-review-pro v1.1 fix triggered) | soft · profile routing | L4 | data_asset |
+| C-14 | External authoritative value internally consistent but globally wrong: ACMG PTEN BA1 threshold is consistent across raw/parentheses/tables (self-consistent) yet differs 18× from ClinGen cspec v3.2 (skill 0.01 vs official 0.00056); all five layers passed without catching it — requires the L2.5 external-value verification layer to close the blind spot (2026-10-09, skill-review-pro v1.3 new trigger) | hard · external value untraceable | L2.5 | hybrid |
+| C-15 | Clone detection looked only at doc similarity, missing "doc forked but execution body same-source" twins: ev-variant-literature-patient ↔ variant-literature-patient share main.py (2 scripts with identical content hash), SKILL.md one-new-one-old with similarity <85% slipped past v1.3, same execution body evolving separately = maximum drift risk — v1.4 adds a script-content-hash same-source channel (2026-10-10, skill-review-pro v1.4 trigger) | soft · drift | P2 | hybrid |
+| C-16 | The review tool itself drowned in false positives: external_check reported 2 FAIL/7 WARN for skill-review-pro (no external authoritative values); every item judged a false positive — ① arrow `-> 0` caught by CMP_RE as comparator `>` ("grep old phrase -> 0 hits"); ② teaching/template examples treated as external values (doc self-referencing `<0.00001`, `0.002%`, template `≥2PS`/`1 BA1`). Conclusion: L2.5 should be N/A; but the tool flaw is exposed — a review tool's worst enemy is false positives; too many erode trust (2026-10-10, skill-review-pro v1.5 trigger) | soft · false-positive source | L2.5 | hybrid |

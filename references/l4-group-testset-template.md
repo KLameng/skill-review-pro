@@ -1,53 +1,50 @@
-# 群级 L4 测试集模板（GAP-5，v1.2 新增）
+# Group-Level L4 Test-Set Template (GAP-5, added in v1.2)
 
-> 目的：对"技能群"（多个子技能组合协作，如 ACMG 评级群）做行为实证时，
-> 单技能测试集不够——需在**群协作语义**（组合逻辑）层面建回归。本文件给模板。
+> Purpose: when behaviorally verifying a "skill group" (multiple sub-skills collaborating, e.g. an ACMG grading group), a single-skill test set is not enough — regression must be built at the **group-collaboration semantics** (combinatorial logic) level. This file gives the template.
 
-## 何时用群级测试集
+## When to use a group-level test set
 
-- 技能由多个子技能通过**调度层**协作（如"总调度圈定 → 逐码判定 → 汇总定级"）；
-- 存在**跨技能组合规则**（互斥矩阵、联合规则、分值系统、阈值表），错误常出现在组合而非单码；
-- L4 三问判定该群必跑（输出可契约核对 + 有金标准 + 后果严重）。
+- The skill is composed of multiple sub-skills collaborating through a **scheduler** (e.g. "total scheduler scopes → per-code judgment → summary grading");
+- There are **cross-skill combination rules** (exclusion matrix, combined rules, point system, threshold tables); errors often appear in combination, not single codes;
+- The L4 three questions judge this group as must-run (deterministic-contract output + golden source + severe consequences).
 
-## 群级测试集构建步骤
+## Group-level test-set construction steps
 
-1. **沉淀群规则为可机读契约**：把组合规则抽成三个表——
-   - 互斥矩阵（哪些证据码不能并存）；
-   - 联合规则表（经典规则：证据等级组合 → 分级）；
-   - 分值系统（证据强度 → 分值 → 分级区间）。
-2. **从金标准抽用例**：按金标准来源（指南规则表）构造"证据码集合 + 使用等级 → 预期分级"的用例行。
-3. **覆盖三域**：
-   - 致病域（≥2PS、3PM、PVS1+组合…）； <!-- ext-ignore: 模板用例示例，非外部权威值 -->
-   - 良性域（1 BA1、≥2 BS、1BS+1BP…）； <!-- ext-ignore: 模板用例示例，非外部权威值 -->
-   - 边界域（恰在阈值边界、互斥对并存、PM1+PP3 软提醒、PVS1 降级态）。 <!-- ext-ignore: 模板用例示例，非外部权威值 -->
-4. **双方案跑**：若技能支持双套方法（经典 + 分值），两套各自对齐金标准，分别算命中率，标出分歧用例。
+1. **Condense group rules into a machine-readable contract**: extract combination rules into three tables —
+   - exclusion matrix (which evidence codes cannot coexist);
+   - combined-rule table (classic rules: evidence-level combination → classification);
+   - point system (evidence strength → points → classification interval).
+2. **Draw cases from the golden source**: build "evidence-code set + level → expected classification" case rows from golden sources (guideline rule tables).
+3. **Cover three domains**:
+   - pathogenic domain (≥2PS, 3PM, PVS1+combination…); <!-- ext-ignore: template example, not external authoritative value -->
+   - benign domain (1 BA1, ≥2 BS, 1BS+1BP…); <!-- ext-ignore: template example, not external authoritative value -->
+   - boundary domain (right at threshold, exclusion pairs coexisting, PM1+PP3 soft notice, PVS1 downgrade states). <!-- ext-ignore: template example, not external authoritative value -->
+4. **Run both schemes**: if the skill supports two methods (classic + point), align each to the golden separately, compute hit rates separately, and flag divergent cases.
 
-## 用例表模板
+## Case-table template
 
 ```
-ID | 用例(证据码+等级)       | 金标 | 方案A | 方案B | 缺口/备注
+ID | Case (evidence code + level) | Golden | Plan A | Plan B | Gap/Notes
 ---|------------------------|------|-------|-------|--------
-T1 | ≥2PS                   | P    | P     | LP    | 方案B漏报致病（经典vs分值分歧）
-T20| 2BS                    | B    | B     | B     | 良性域可达性
+T1 | ≥2PS                   | P    | P     | LP    | Plan B misses pathogenic (classic vs point divergence)
+T20| 2BS                    | B    | B     | B     | benign-domain reachability
 T24| BA1 alone              | B    | B     | B     | stand-alone
 ```
 
-- `金标` 必须来自外部权威（见 `golden-source-guide.md`），不得自编；
-- 每个用例记录"输入证据码 → 预期分级"，脚本可重跑（如 ACMG 的 `acmg_l4_combine_check_v2.py`）。
+- `Golden` must come from an external authority (see `golden-source-guide.md`), never self-invented;
+- record each case's "input evidence code → expected classification"; scripts re-run (e.g. ACMG's `acmg_l4_combine_check_v2.py`).
 
-## 断言指标
+## Assertion metrics
 
-- **recall（不漏报优先）**：技能判为 P/LP 中真 P/LP 的比例；临床类从严，漏报 > 设定阈值记 hard"行为不达标"。
-- **precision / 全对率**：方案全对 / 总用例。
-- **良性域可达性**：良性用例是否全部能跑（良性码是否可圈定/可判）——这是群级特有的可达性检查。
-- **未定义/缺口**：任何用例因技能未定义某码而无法判 → 记 hard。
+- **recall (no-miss priority)**: proportion of true P/LP among what the skill judged P/LP; clinical types strict; miss > set threshold → hard "behavior below threshold".
+- **precision / full-hit rate**: fully-correct schemes / total cases.
+- **benign-domain reachability**: whether all benign cases can run (whether benign codes can be scoped/judged) — a group-level-specific reachability check.
+- **undefined/gap**: any case the skill cannot judge because a code is undefined → hard.
 
-## 与单技能 L4 的关系
+## Relation to single-skill L4
 
-单技能 L4 测"单个子技能判单码是否正确"；群级 L4 测"组合起来定级是否正确"。
-两者互补：先单码正确，再组合正确。群级测试集通常暴露"组合规则矛盾""良性不可达""跨文件不一致"这类单码测试看不见的问题。
+Single-skill L4 tests "does one sub-skill judge one code correctly"; group-level L4 tests "does the combination grade correctly". Complementary: single-code correct first, then combination correct. Group-level test sets usually expose problems single-code tests cannot see — "combination-rule contradictions", "benign unreachable", "cross-file inconsistency".
 
-## 交付
+## Delivery
 
-回归脚本 + 用例表 + 结果 JSON 一并留档（写入 review_report.json 的 behavior 与 registry），
-供持续治理漂移对比。脚本可复用（改用例不改逻辑）。
+Archive the regression script + case table + result JSON together (write into review_report.json's behavior and registry) for governance drift comparison. Scripts are reusable (change cases, not logic).

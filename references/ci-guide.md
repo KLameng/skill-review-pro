@@ -1,51 +1,49 @@
-# CI 接入指引（v1.5，P2）
+# CI Integration Guide (v1.5, P2)
 
-> 目的：把 skill-review-pro 的一键复审挂到发版/提交流程里，让"每次变更都自动审"，
-> 持续防漂移。核心入口是 `scripts/run_review.py`——退出码 **0=无 FAIL**、**1=有 FAIL**，天然可被 CI 判定。
+> Purpose: hook skill-review-pro's one-click review into the release/commit flow so "every change is auto-reviewed", continuously preventing drift. Core entry: `scripts/run_review.py` — exit code **0 = no FAIL**, **1 = has FAIL**, natively CI-judgeable.
 
-## 前置：确认 python 可用
+## Prerequisite: confirm python is available
 
-run_review.py 仅依赖标准库，需环境里有 python3。各 CI 平台自带或安装即可。
+run_review.py depends only on the standard library; the environment needs python3. Each CI platform ships or installs it.
 
 ---
 
-## 方案 A：pre-commit hook（本机/团队本地）
+## Option A: pre-commit hook (local machine / team-local)
 
-在技能仓库 `.git/hooks/pre-commit`（或集中 pre-commit 框架）加入：
+Add to `.git/hooks/pre-commit` in the skill repo (or a centralized pre-commit framework):
 
 ```bash
 #!/usr/bin/env bash
-# .git/hooks/pre-commit —— 提交前一键复审被审技能目录
+# .git/hooks/pre-commit —— one-click review of the target skill dir before commit
 SKILL_DIR="${1:-.user_skills/skill-review-pro}"
 python3 "$SKILL_DIR/scripts/run_review.py" "$SKILL_DIR" --out "$SKILL_DIR/reviews" || {
-  echo "复审未通过（有 FAIL）。请先修复或人工判定后再提交。";
-  echo "产物: $SKILL_DIR/reviews/review_*.md + semantic_review_points.md";
+  echo "Review failed (has FAIL). Fix or manually adjudicate before committing.";
+  echo "Artifacts: $SKILL_DIR/reviews/review_*.md + semantic_review_points.md";
   exit 1;
 }
 ```
 
-若用 [pre-commit](https://pre-commit.com) 框架，`pre-commit-config.yaml`：
+If using the [pre-commit](https://pre-commit.com) framework, `pre-commit-config.yaml`:
 
 ```yaml
 repos:
   - repo: local
     hooks:
       - id: skill-review-pro
-        name: skill-review-pro 一键复审
+        name: skill-review-pro one-click review
         entry: python3 .user_skills/skill-review-pro/scripts/run_review.py
         args: [.user_skills/skill-review-pro, --out, .user_skills/skill-review-pro/reviews]
         language: system
         pass_filenames: false
 ```
 
-> 提示：有 FAIL 会阻断提交。若某 FAIL 已人工判定为误报/可接受，先修复到清零，或按本技能 §6
-> 以 `waived`（附理由）登记，不要把"绕过"写进脚本。
+> Note: a FAIL blocks the commit. If a FAIL was manually adjudicated as false positive/acceptable, fix to clear, or register as `waived` (with reason) per §6 of this skill — never bake "bypass" into the script.
 
 ---
 
-## 方案 B：GitHub Actions（开源仓库）
+## Option B: GitHub Actions (open-source repo)
 
-`.github/workflows/skill-review.yml`：
+`.github/workflows/skill-review.yml`:
 
 ```yaml
 name: skill-review-pro
@@ -61,12 +59,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-      - name: 一键复审
+      - name: one-click review
         run: |
           python3 .user_skills/skill-review-pro/scripts/run_review.py \
             .user_skills/skill-review-pro \
             --out .user_skills/skill-review-pro/reviews
-      - name: 上传复审报告
+      - name: upload review reports
         uses: actions/upload-artifact@v4
         with:
           name: review-reports
@@ -74,30 +72,28 @@ jobs:
         if: always()
 ```
 
-> 有 FAIL 时 run_review.py 退出码 1 → 工作流自动标红。报告作为 artifact 可下载查看。
+> On FAIL, run_review.py returns exit code 1 → the workflow is marked red. Reports are downloadable as artifacts.
 
 ---
 
-## 方案 C：豆包定时重审（无仓库时按周期防漂移）
+## Option C: Doubao scheduled re-review (periodic drift prevention without git)
 
-无需 git 也能"每周/每月自动审一次"，用豆包的**定时任务（doubao-cron-scheduler）**：
+Even without git, "auto-review once a week/month" works via Doubao's **scheduled task (doubao-cron-scheduler)**:
 
-1. 触发方式：定时任务每周期执行一次"一键复审"命令；
-2. 命令示例：
-   `python3 <skill-review-pro>/scripts/run_review.py <被审技能目录> --out <reviews目录>`;
-3. 触发后核对：
-   - 有新 FAIL → 说明技能或外部权威值（指南/阈值升版）漂移，按本技能 P1/持续治理触发重审与修复；
-   - 无 FAIL → 记录本轮已审，维持 ready。
-4. 建议频率：临床/金融/安全类技能**月审**或**外部权威升版时**；普通技能按版本周期。
+1. Trigger: the scheduled task runs a "one-click review" command each period;
+2. Command example:
+   `python3 <skill-review-pro>/scripts/run_review.py <target-skill-dir> --out <reviews-dir>`;
+3. After trigger, check:
+   - new FAIL → the skill or external authoritative values (guideline/threshold upgrades) drifted; trigger re-review and fix per this skill's P1 / continuous governance;
+   - no FAIL → record this round as reviewed, keep ready.
+4. Suggested frequency: clinical/finance/security skills **monthly** or **when an external authority upgrades**; ordinary skills per version cycle.
 
-> 配合 P1 外部升版重审：external_check.py 锁定的外部值版本（cspec vX.Y / 年份）一旦过期，
-> 定时复审会自动暴露"未锁版本/来源过期"项，触发重新核验。
+> With P1 external-upgrade re-review: once an external value version locked by external_check.py (cspec vX.Y / year) expires, scheduled review automatically exposes "unlocked version / expired source" and triggers re-verification.
 
 ---
 
-## 兜底原则
+## Fallback principles
 
-- run_review.py 只做**机器初筛**；`semantic_review_points.md` 里的语义项（外部值真伪、克隆对区分、
-  L4 是否真跑）**必须由人/AI 复核**后再宣布 ready。CI 阻断的是"机器层 FAIL"，不代表语义层通过。
-- CI 里不要对 `--out` 指向被审目录自身之外的共享目录，避免多进程写同一位置冲突；串行执行。
-- 失败重试仅限瞬时错误（网络/超时）；"有 FAIL"是真实结论，不要自动重试掩盖。
+- run_review.py only does **machine pre-filtering**; semantic items in `semantic_review_points.md` (external-value truth, clone discrimination, whether L4 truly ran) **must be reviewed by human/AI** before declaring ready. CI blocking a "machine-layer FAIL" does not mean the semantic layer passed.
+- In CI, do not point `--out` at a shared directory outside the target itself, to avoid multi-process write conflicts; run serially.
+- Failure retries are limited to transient errors (network/timeout); "has FAIL" is a real conclusion — do not auto-retry to mask it.

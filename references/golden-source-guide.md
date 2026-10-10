@@ -1,47 +1,41 @@
-# L4 金标准来源库（GAP-4，v1.2 新增）
+# L4 Golden-Source Library (GAP-4, added in v1.2)
 
-> 目的：L4 行为级实证要求"用权威标签不得自编"。本文件按技能领域给出**权威金标准来源建议**，
-> 避免执行者在无指引时靠领域知识临时拼装或自造标签（自造 = 假实证）。
+> Purpose: L4 behavioral verification requires "use authoritative labels, never invent them". This file gives **authoritative golden-source recommendations by domain**, so executors don't improvise or self-invent labels from domain knowledge alone (self-invention = fake verification).
 
-## 选金标准的三条硬规则
+## Three hard rules for choosing a golden source
 
-1. **外部权威优先**：优先使用外部组织发布的、可溯源的判定/分类标签（指南、标准、官方数据库），不用本技能自己产出的结论当金标准（自我参照 = 假实证）。
-2. **版本锁定**：金标准必须记录来源 + 版本 + 获取日期（如 "ACMG-AMP 2015 Table 5"，"Tavtigian et al 2020"），并在报告注明；指南/标准升版后按持续治理重评估触发重验。
-3. **规模与偏斜**：测试集 ≥20 条或按金标准体量；必须覆盖正/负样本与边界，防"小样本假精度"。
+1. **External authority first**: prefer judgment/classification labels published by external organizations, traceable (guidelines, standards, official databases); never use the skill's own output as its golden source (self-reference = fake verification).
+2. **Version lock**: record source + version + retrieval date for the golden source (e.g. "ACMG-AMP 2015 Table 5", "Tavtigian et al 2020"), and state it in the report; after a guideline/standard upgrade, re-verify per the continuous-governance re-evaluation trigger.
+3. **Scale and skew**: test set ≥20 cases or sized by golden-source volume; must cover positive/negative samples and boundaries, guarding against "small-sample false precision".
 
-## 按领域推荐来源
+## Recommended sources by domain
 
-| 技能领域 | 推荐金标准来源 | 备注 |
+| Skill domain | Recommended golden sources | Notes |
 |---|---|---|
-| 临床/遗传（变异评级） | ACMG/AMP 2015 联合规则；ACMG/SVI 更新；ClinGen VCEP 基因特异性规则；ClinVar 权威提交 | 用指南规则表 + ClinVar 经复核标签建组合回归 |
-| 变异分类（分值法） | Tavtigian et al 2020 point system；ACMG 2023 草案区间 | 与经典规则分开跑，分别对齐 |
-| 基因/表型命名 | HGNC、OMIM、GenCC（遗传方式 MOI）、ClinVar | 标准化字段对照 |
-| 安全/漏洞（L5 相关的技能） | OWASP Top 10、NIST、CWE、CVE | 判定映射到公开漏洞库 |
-| 代码/脚本技能 | 官方测试套件、语言 spec、可复现的 golden 输出 | 跑真实输入对照预期输出 |
-| 金融/合规 | 监管文件、行业协会规则、公开披露 | 标注"已查证" vs "一方称" |
-| 通用文档/数据资产 | 技能自带金标准样例集/校准集（如坐标库 golden、mapping crosswalk） | 数据资产型优先复用自带金标准 |
+| Clinical/genetics (variant classification) | ACMG/AMP 2015 combined rules; ACMG/SVI updates; ClinGen VCEP gene-specific rules; ClinVar authoritative submissions | Build combined regression from guideline rule tables + ClinVar curated labels |
+| Variant classification (point system) | Tavtigian et al 2020 point system; ACMG 2023 draft intervals | Run separately from classic rules, align each |
+| Gene/phenotype naming | HGNC, OMIM, GenCC (MOI), ClinVar | Compare standardized fields |
+| Security/vulnerability (L5-related skills) | OWASP Top 10, NIST, CWE, CVE | Map judgments to public vulnerability databases |
+| Code/script skills | Official test suites, language spec, reproducible golden outputs | Run real inputs against expected outputs |
+| Finance/compliance | Regulatory documents, industry-association rules, public disclosures | Mark "verified" vs "one-party claims" |
+| General document/data-asset | Skill's own golden-sample/calibration set (e.g. coordinate-library golden, mapping crosswalk) | Data-asset skills reuse built-in golden by preference |
 
-## 自建金标准样例集（无外部权威时）
+## Building a golden-sample set yourself (no external authority)
 
-若领域无外部权威，可用**双人独立标注 + 不一致裁决**的校准集（人工标注，须在报告注明"人工标注、非外部权威"），
-或**反证集**（已知错误/边界案例，验证技能不漏报）。用户偏好不做需人工标注者的 kappa 验证时，
-验证交开源后社区自发完成，执行只聚焦不依赖人工标注的自动化部分（如规则组合回归、脚本 golden）。
+If a domain has no external authority, use a **dual-annotator independent labeling + dispute arbitration** calibration set (human-annotated; must note in the report "human-annotated, not external authority"), or a **counterexample set** (known-error/boundary cases verifying the skill does not miss). When the user prefers not to do kappa verification requiring human annotators, defer verification to community ratification after open-sourcing; execution focuses only on the automated parts that do not depend on human annotation (e.g. rule-combination regression, script golden).
 
-## 金标准 → 回归用例映射
+## Golden source → regression-case mapping
 
-每个金标准条目应能映射到具体测试用例（输入 → 预期输出），形成可重跑的回归集。
-群级多技能用 `l4-group-testset-template.md` 的组织方式（互斥矩阵 + 联合规则 + 分值系统 → 用例表）。
+Each golden entry should map to concrete test cases (input → expected output), forming a re-runnable regression set. For group-level multi-skill, use the organization in `l4-group-testset-template.md` (exclusion matrix + combined rules + point system → case table).
 
-## 临床技能轻量 L4（P5，v1.3 新增：单证据码片段回归）
+## Lightweight L4 for clinical skills (P5, v1.3: single-evidence-code fragment regression)
 
-当完整分级 L4 门槛过高（缺权威全变异金标准 / 真实样本成本高 / 需人工标注）时，
-**不要跳过行为实证**，改用**单证据码片段回归**——只验证单个证据码的判定规则正确性，
-不需要完整"变异→分级"闭环：
+When full-grading L4 is too costly (no authoritative full-variant golden / high real-sample cost / needs human annotation), **do not skip behavioral verification** — use **single-evidence-code fragment regression**, verifying only the correctness of one evidence code's decision rule, without the full "variant → grading" loop:
 
-- **对象**：技能内单条判定规则（如 REVEL→PP3/BP4 强度、AF→BA1/BS1/PM2 档位、互斥对取舍）。
-- **用例来源**：从 ClinVar 经复核的变异 / ClinGen VCEP 规则表 / 已发表案例抽"证据码→预期强度"用例，而非自编。
-- **用例形态**：`输入参数 → 预期证据码强度`（如 `REVEL=0.84 → PP3_Moderate`；`AF=0.02% 且 HL-AD → 满足 PM2`）。
-- **规模**：每规则 ≥10 条，覆盖边界（阈值上下、区间端点）。
-- **判定**：技能规则把每个输入映射到的强度 与 预期强度 一致率 = 该规则的片段精度；低于设定阈值 → L4 不达标。
-- **优点**：不依赖完整分级金标准，单规则即可回归，成本低、可自动重跑；多规则拼起来即近似完整 L4。
-- **模板**：`l4-group-testset-template.md`（互斥矩阵/联合规则/分值系统→用例表，可拆成单证据码粒度）。
+- **Target**: a single decision rule in the skill (e.g. REVEL→PP3/BP4 strength, AF→BA1/BS1/PM2 tier, exclusion-pair choice).
+- **Case source**: draw "evidence code → expected strength" cases from ClinVar curated variants / ClinGen VCEP rule tables / published cases, not self-invented.
+- **Case form**: `input parameter → expected evidence-code strength` (e.g. `REVEL=0.84 → PP3_Moderate`; `AF=0.02% and HL-AD → satisfies PM2`).
+- **Scale**: ≥10 per rule, covering boundaries (above/below threshold, interval endpoints).
+- **Judgment**: the rate at which the skill rule maps each input to the expected strength = that rule's fragment precision; below the set threshold → L4 below threshold.
+- **Advantages**: no dependence on a full-grading golden; single rules regress alone; low cost, auto re-runnable; multiple rules assembled approximate full L4.
+- **Template**: `l4-group-testset-template.md` (exclusion matrix / combined rules / point system → case table, splittable to single-evidence-code granularity).

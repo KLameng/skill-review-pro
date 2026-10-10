@@ -1,84 +1,84 @@
-# Skill-Review-Pro：AI Skill 质量保障工具（技能复审与行为实证 SOP）
+# Skill-Review-Pro: An AI Skill Quality-Assurance Tool (Skill Review & Behavioral Verification SOP)
 
-> **给每个 SKILL.md 技能一条可执行、可验证、可发版的质量流水线。**
-> 作者：KLameng · MIT License · 中文权威版（main）
+> **A runnable, verifiable, releasable quality pipeline for every SKILL.md skill.**
+> Author: KLameng · MIT License · **English edition** (en branch)
 
-## 它是什么
+## What it is
 
-一套**通用、开箱即用**的 SKILL.md 技能复审 / 审核 / 发版前检查 / 行为级评测 / 安全审查作业流程。
+A **general-purpose, out-of-the-box** SOP for SKILL.md skill review / audit / pre-release check / behavioral evaluation / security scan.
 
-当你想确认"这个技能能不能进生产直接用、质量靠不靠谱"时，用它：一个命令跑机器层检查，再按清单做语义复核，输出一份带**问题分级**和**发版门禁**的评审报告。
+When you need to know "is this skill production-ready and trustworthy?", use it: one command runs the machine-layer checks, then follow a checklist for semantic review, producing a review report with **issue severity grading** and a **release gate**.
 
-核心是 **五层复审法**：
+Core method: the **Five-Layer Review Method**:
 
-| 层 | 审什么 | 怎么判 |
+| Layer | What it checks | How to judge |
 |---|---|---|
-| **L1 文档自洽** | 文档写得对不对 | 规则无矛盾、术语一致、流程闭环、触发精准 |
-| **L2 逻辑审查** | 能不能照做 | 步骤可执行、代码正确、输入规格、异常兜底（自动化 `static_check.py` / `counts_check.py` / `consistency_check.py`） |
-| **L2.5 外部值核验** | 引用的权威值对不对 | 每个外部阈值/规则/法规绑定来源 + 版本，锁升版重审（`external_check.py`） |
-| **L3 实战推演** | 文档走查 | 用真实输入从头走链路，记录轨迹找卡点 |
-| **L4 行为级实证** | 真跑起来测效果 | 条件式：测试集 + 无技能基线 + 确定性契约 + 重复性 + 精度/召回 |
-| **L5 安全红线扫描** | 安不安全 | 凭据外泄 / 动态执行 / 网络外泄 / 持久化 / 破坏性操作 |
+| **L1 Doc self-consistency** | Is the doc internally consistent? | no rule contradictions, consistent terms, closed loops, precise triggers |
+| **L2 Logic review** | Can it be followed as written? | steps executable, code correct, input specs, exception fallbacks (automated via `static_check.py` / `counts_check.py` / `consistency_check.py`) |
+| **L2.5 External-value verification** | Are referenced authoritative values correct? | every external threshold/rule/regulation bound to a source + version, lock re-review on upgrade (`external_check.py`) |
+| **L3 Walkthrough** | Document walk-through | walk the full chain with real input, record a trace, find blockers |
+| **L4 Behavioral verification** | Run it and measure | conditional: test set + no-skill baseline + deterministic contract + repeatability + precision/recall |
+| **L5 Security red-line scan** | Is it safe? | credential leak / dynamic execution / exfiltration / persistence / destructive ops |
 
-配套**持续治理**：registry 累积 + 重评估触发 + 漂移监控 + **修复→复测→清零闭环**（修完重跑、清零才发版）。
+Plus **continuous governance**: registry accumulation + re-evaluation triggers + drift monitoring + a **fix → re-test → clear loop** (re-run after fixes, release only when clear).
 
-## 为什么需要它
+## Why you need it
 
-SKILL.md 这种"技能化 AI 工具"正在爆发，但**质量保障是空白**：很多技能文档自洽、实际一跑就崩，或引用了过期的权威值、或埋了安全红线。这个工具解决"技能能不能发版"的判断，把质量从"凭感觉"变成"可追溯的流水线"。
+The "skill-as-AI-tool" form (SKILL.md skills, Claude Skills, various agent skill frameworks) is exploding, but **quality assurance is a gap**: many skills are internally consistent yet crash at runtime, or cite stale authoritative values, or hide security red lines. This tool answers "can this skill be released?" and turns quality from "gut feeling" into a traceable pipeline.
 
-## 快速开始
+## Quick start
 
-> 依赖：仅 Python 3 标准库，零第三方安装。
+> Dependency: Python 3 standard library only — zero third-party installs.
 
 ```bash
-# 一键复审（推荐入口）：一个命令跑完 static/counts/consistency/external 四层机器检查
-python scripts/run_review.py <被审技能目录>
+# One-click review (recommended entry): run all four machine layers in one command
+python scripts/run_review.py <target-skill-directory>
 
-# 技能群聚合（根目录无 SKILL.md、含多个子技能时）
-python scripts/run_review.py <技能群根目录> --group
+# Skill-group aggregation (root has no SKILL.md but contains sub-skills)
+python scripts/run_review.py <skill-group-root> --group
 
-# 退出码：0 = 无 FAIL，1 = 有 FAIL（可挂 CI/pre-commit 阻断）
+# Exit codes: 0 = no FAIL, 1 = has FAIL (usable to gate CI / pre-commit)
 ```
 
-一键脚本输出三份产物：
-- **Markdown 复审报告**（含问题分级 hard/soft、发版门禁）
-- **`review_report.json`**（机器可读，含群聚合与 fixes 字段）
-- **`semantic_review_points.md`**（语义复核清单，机器初筛 → 人/AI 语义复核两段式）
+One-click output produces three artifacts:
+- **Markdown review report** (issue grading hard/soft + release gate)
+- **`review_report.json`** (machine-readable, incl. group aggregation & fixes fields)
+- **`semantic_review_points.md`** (semantic review checklist — two-stage: machine pre-filter → human/AI semantic review)
 
-## 目录结构
+## Directory structure
 
 ```
 skill-review-pro/
-├── SKILL.md                  # 技能复审与行为实证 SOP（五层复审法主文档）
+├── SKILL.md                  # Skill Review & Behavioral Verification SOP (five-layer method)
 ├── scripts/
-│   ├── run_review.py         # 一键复审入口（四层机器检查合并 + 退出码）
-│   ├── static_check.py       # L1/L2/L5 静态检查（frontmatter/引用/反模式/安全红线）
-│   ├── counts_check.py       # 数字口径必查（计数声明 vs 实际）
-│   ├── consistency_check.py  # 跨文件一致性 + 克隆检测（文本相似度 + 脚本哈希）
-│   ├── external_check.py     # L2.5 外部权威值溯源（来源 + 版本锁定）
-│   └── gen_report.py         # 报告生成（单技能 / 群聚合 JSON）
+│   ├── run_review.py         # One-click entry (four machine layers + exit codes)
+│   ├── static_check.py       # L1/L2/L5 static checks (frontmatter / refs / anti-patterns / security)
+│   ├── counts_check.py       # Numeric-consistency check (declared counts vs actual)
+│   ├── consistency_check.py  # Cross-file consistency + clone detection (text similarity + script hash)
+│   ├── external_check.py     # L2.5 external authoritative-value tracing (source + version)
+│   └── gen_report.py         # Report generation (single / group JSON)
 ├── references/
-│   ├── checklist.md          # L1–L5 + 持续治理 详细检查清单
-│   ├── cases.md              # 案例库归档规则（强制）
-│   ├── ci-guide.md           # CI / pre-commit 接入指引
-│   ├── fix-loop.md           # 修复→复测→清零 闭环工作流
-│   ├── golden-source-guide.md# L4 金标准来源库（按领域权威来源）
-│   └── l4-group-testset-template.md  # 技能群级 L4 测试集模板
+│   ├── checklist.md          # Detailed L1–L5 + governance checklist
+│   ├── cases.md              # Case library (mandatory archive target)
+│   ├── ci-guide.md           # CI / pre-commit integration guide
+│   ├── fix-loop.md           # Fix → re-test → clear closed loop
+│   ├── golden-source-guide.md# L4 golden-source library (authoritative sources by domain)
+│   └── l4-group-testset-template.md  # Group-level L4 test-set template
 ├── LICENSE                   # MIT
-└── README.md                 # 本文档
+└── README.md                 # This file
 ```
 
-## CI 接入
+## CI integration
 
-`run_review.py` 退出码天然可被 CI 判定（0=通过 / 1=阻断）。把每次技能变更自动复审，持续防漂移。示例见 `references/ci-guide.md`。
+`run_review.py`'s exit code is natively CI-judgeable (0 = pass / 1 = block). Put every skill change through automatic review to prevent drift. See `references/ci-guide.md`.
 
-## 本仓库怎么用
+## How to use this repo
 
-- 作为**独立工具**：clone 后用 `run_review.py` 审你的任意 SKILL.md 技能。
-- 作为**规范**：把五层复审法 + 清单抄进你的技能开发流程，作为发版门禁。
+- **As a standalone tool**: clone and review any of your SKILL.md skills with `run_review.py`.
+- **As a standard**: adopt the five-layer method + checklist into your skill development process as a release gate.
 
-## 许可与致谢
+## License & acknowledgments
 
-- **MIT License**，署名 KLameng <911712412@qq.com>。
-- 与姊妹项目 **TACT 三轴坐标法**（AI 系统故障定位与合规映射）互补：TACT 负责出事后"归因"，本工具负责发版前"预防"，合起来是 AI 技能的"预防 + 归因"质量闭环。
-- 欢迎贡献：见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+- **MIT License**, authored by KLameng <911712412@qq.com>.
+- Complements the sister project **TACT Three-Axis Method** (AI system failure diagnosis & compliance mapping): TACT attributes failures post-incident; this tool prevents them pre-release — together a "prevent + attribute" quality loop for AI skills.
+- Contributions welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
